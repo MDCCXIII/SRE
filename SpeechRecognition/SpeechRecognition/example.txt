@@ -1,0 +1,22 @@
+-- format
+-- [text to recognize] | [text to display or execute] | [is text a command?]
+
+-- simple text --
+one|you said "one"|false
+two|you said "two"|false
+three|you said "three"|false
+four|you said "four"|false
+five|you said "five"|false
+six|you said "six"|false
+seven|you said "seven"|false
+eight|you said "eight"|false
+nine|you said "nine"|false
+ten|you said "ten"|false
+Patrick|you said "Patrick"|false
+do you like me|you made me I kinda have too|false
+
+
+-- commands --
+wordpad|wordpad.exe|true
+calculator|calc.exe|true
+I have a burn victim|"http://en.wikipedia.org/wiki/List_of_burn_centers_in_the_United_States"|true
