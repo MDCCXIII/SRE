@@ -42,7 +42,7 @@ namespace SpeechRecognition
         /// <summary>
         /// The name to call commands
         /// </summary>
-        string aiName = "Jarvis";
+        static string aiName = "Jarvis";
 
         /// <summary>
         /// Switch for mute mode
@@ -54,6 +54,12 @@ namespace SpeechRecognition
         /// </summary>
         static bool completed = false;
 
+        string disableAudioCommand = aiName + " mute";
+
+        string enableAudioCommand = "unmute";
+
+        string culture = "en-US";
+
         #endregion
 
         #region ctor
@@ -61,7 +67,7 @@ namespace SpeechRecognition
         public void Start()
         {
             try {
-                initializeSpeechRecognitionEngine("en-US");
+                initializeSpeechRecognitionEngine(culture);
 
                 //Create the speech synthesizer
                 speechSynthesizer = new SpeechSynthesizer();
@@ -72,15 +78,58 @@ namespace SpeechRecognition
                 Console.WriteLine("Voice recognition failed " + ex.Message);
             }
 
-            disableAudioInput();
-            speechRecognitionEngine.EmulateRecognize("Jarvis mute", CompareOptions.IgnoreCase);
+            try {
+                //force load jarvis into keyboard command entry mode (for developement and testing)
+                disableAudioInput();
+                speechRecognitionEngine.EmulateRecognize(disableAudioCommand, CompareOptions.IgnoreCase);
 
-            //Keeps the command prompt going until you say jarvis quit
-            while (lastCommand.ToLower() != "quit") {
-                
+                //Keeps the command prompt going until you say jarvis quit
+                while (lastCommand.ToLower() != "quit") {
+
+                }
+            } catch (Exception ex) {
+                Debug.WriteLine(ex);
             }
         }
 
+        /// <summary>
+        /// forces input into and out of keyboard entry
+        /// </summary>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        private bool keyboardEntryMode(SpeechRecognizedEventArgs e)
+        {
+            bool isUnmuted = false;
+            if (e.Result.Text == disableAudioCommand) {
+                if (!muteMode) {
+                    disableAudioInput();
+                }
+                if (muteMode) {
+                    string typedCommand = "";
+                    while (!typedCommand.ToLower().Equals(enableAudioCommand)) {
+                        Console.WriteLine("-");
+                        typedCommand = Console.ReadLine();
+                        if (typedCommand.ToLower().Equals("quit")) {
+                            Environment.Exit(0);
+                        } else if (!typedCommand.ToLower().Equals(enableAudioCommand)) {
+                            speechRecognitionEngine.EmulateRecognize(typedCommand, CompareOptions.IgnoreCase);
+                        }
+                    }
+                    enableAudioInput();
+                }
+                isUnmuted = true;
+            }
+            return isUnmuted;
+        }
+
+        #endregion
+
+        #region internal functions and methods
+
+        /// <summary>
+        /// Initializes the speech engine
+        /// </summary>
+        /// <param name="preferredCulture"></param>
         private void initializeSpeechRecognitionEngine(string preferredCulture)
         {
             // create the engine
@@ -99,12 +148,6 @@ namespace SpeechRecognition
             // start listening
             speechRecognitionEngine.RecognizeAsync(RecognizeMode.Multiple);
         }
-
-
-
-        #endregion
-
-        #region internal functions and methods
 
         /// <summary>
         /// Creates the speech engine.
@@ -205,32 +248,12 @@ namespace SpeechRecognition
             }
         }
 
-        private bool setMuteMode(SpeechRecognizedEventArgs e)
-        {
-            bool isUnmuted = false;
-            if (e.Result.Text == "Jarvis mute") {
-                if (!muteMode) {
-                    disableAudioInput();
-                }
-                if (muteMode) {
-                    string typedCommand = "";
-                    while (!typedCommand.ToLower().Equals("unmute")) {
-                        Console.WriteLine("-");
-                        typedCommand = Console.ReadLine();
-                        if (!typedCommand.ToLower().Equals("unmute")) {
-                            speechRecognitionEngine.EmulateRecognize(typedCommand, CompareOptions.IgnoreCase);
-                        }
-                    }
-                    enableAudioInput();
-                }
-                isUnmuted = true;
-            }
-            return isUnmuted;
-        }
-
-        // Handle the RecognizeCompleted event.
-        static void RecognizeCompletedHandler(
-          object sender, RecognizeCompletedEventArgs e)
+        /// <summary>
+        /// Handle the RecognizeCompleted event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        static void RecognizeCompletedHandler(object sender, RecognizeCompletedEventArgs e)
         {
             Console.WriteLine(" In RecognizeCompletedHandler.");
 
@@ -257,15 +280,21 @@ namespace SpeechRecognition
             completed = true;
         }
 
+        /// <summary>
+        /// Enables audio input
+        /// </summary>
         private void enableAudioInput()
         {
             speechRecognitionEngine.EmulateRecognize(aiName + " Enabling voice input");
-            initializeSpeechRecognitionEngine("en-US");
+            initializeSpeechRecognitionEngine(culture);
             muteMode = false;
             lastCommand = "";
             Console.WriteLine("Voice input enabled");
         }
 
+        /// <summary>
+        /// Disables audio input
+        /// </summary>
         private void disableAudioInput()
         {
             speechRecognitionEngine.RecognizeAsyncCancel();
@@ -278,8 +307,7 @@ namespace SpeechRecognition
             speechRecognitionEngine.EmulateRecognize(aiName + " Voice input disabled");
             Console.WriteLine("Voice input disabled");
         }
-
-
+        
         #endregion
 
         #region speechEngine events
@@ -293,7 +321,7 @@ namespace SpeechRecognition
         {
             Console.WriteLine("Recognized: " + e.Result.Text);
             string command = "";
-            if (!setMuteMode(e)) {
+            if (!keyboardEntryMode(e)) {
                 command = getKnownTextOrExecute(e.Result.Text);
             }
 
