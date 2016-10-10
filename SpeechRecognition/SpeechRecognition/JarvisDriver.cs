@@ -297,14 +297,9 @@ namespace SpeechRecognition
         /// </summary>
         private void disableAudioInput()
         {
-            speechRecognitionEngine.RecognizeAsyncCancel();
-            // Wait for the operation to complete.
-            while (!completed) {
-                System.Threading.Thread.Sleep(333);
-            }
-            speechRecognitionEngine.SetInputToNull();
+            speechRecognitionEngine.RecognizeAsyncStop();
             muteMode = true;
-            speechRecognitionEngine.EmulateRecognize(aiName + " Voice input disabled");
+            speechSynthesizer.SpeakAsync("Voice input disabled");
             Console.WriteLine("Voice input disabled");
         }
         
