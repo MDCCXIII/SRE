@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SpeechRecognition.SpeechRecognitionAI;
 
 namespace SpeechRecognition
 {
@@ -10,8 +6,8 @@ namespace SpeechRecognition
     {
         static void Main(string[] args)
         {
-            JarvisDriver jarvis = new JarvisDriver();
-            jarvis.Start();
+            AI ai = new AI();
+            ai._Recognition.Start();
         }
     }
 }

@@ -1,5 +1,5 @@
 -- format
--- [text to recognize] | [text to display or execute] | [is text a command?]
+-- [text to recognize] | [text to display or execute] | [is text a command?] | [option: AI Response]
 
 -- simple text --
 one|you said "one"|false
@@ -14,10 +14,12 @@ nine|you said "nine"|false
 ten|you said "ten"|false
 Patrick|you said "Patrick"|false
 do you like me|you made me I kinda have too|false
+thanks jarvis|You're welcome sir|false
+
 
 
 -- commands --
 wordpad|wordpad.exe|true
 calculator|calc.exe|true
 league of legends|C:\Riot Games\League of Legends\lol.launcher.admin.exe|true
-I have a burn victim|"http://en.wikipedia.org/wiki/List_of_burn_centers_in_the_United_States"|true
+I have a burn victim|"http://en.wikipedia.org/wiki/List_of_burn_centers_in_the_United_States"|true|Fetching list of burn centers for you sir

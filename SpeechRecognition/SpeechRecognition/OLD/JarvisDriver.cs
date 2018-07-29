@@ -52,7 +52,7 @@ namespace SpeechRecognition
         /// <summary>
         /// switch to signify mute mode
         /// </summary>
-        static bool completed = false;
+        //static bool completed = false;
 
         string disableAudioCommand = aiName + " mute";
 
@@ -66,7 +66,8 @@ namespace SpeechRecognition
 
         public void Start()
         {
-            try {
+            try
+            {
                 initializeSpeechRecognitionEngine(culture);
 
                 //Create the speech synthesizer
@@ -74,20 +75,25 @@ namespace SpeechRecognition
                 speechSynthesizer.Rate = -1;
 
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Console.WriteLine("Voice recognition failed " + ex.Message);
             }
 
-            try {
+            try
+            {
                 //force load jarvis into keyboard command entry mode (for developement and testing)
                 disableAudioInput();
                 speechRecognitionEngine.EmulateRecognize(disableAudioCommand, CompareOptions.IgnoreCase);
 
                 //Keeps the command prompt going until you say jarvis quit
-                while (lastCommand.ToLower() != "quit") {
+                while (lastCommand.ToLower() != "quit")
+                {
 
                 }
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 Debug.WriteLine(ex);
             }
         }
@@ -100,18 +106,25 @@ namespace SpeechRecognition
         private bool keyboardEntryMode(SpeechRecognizedEventArgs e)
         {
             bool isUnmuted = false;
-            if (e.Result.Text == disableAudioCommand) {
-                if (!muteMode) {
+            if (e.Result.Text == disableAudioCommand)
+            {
+                if (!muteMode)
+                {
                     disableAudioInput();
                 }
-                if (muteMode) {
+                if (muteMode)
+                {
                     string typedCommand = "";
-                    while (!typedCommand.ToLower().Equals(enableAudioCommand)) {
+                    while (!typedCommand.ToLower().Equals(enableAudioCommand))
+                    {
                         Console.WriteLine("-");
                         typedCommand = Console.ReadLine();
-                        if (typedCommand.ToLower().Equals("quit")) {
+                        if (typedCommand.ToLower().Equals("quit"))
+                        {
                             Environment.Exit(0);
-                        } else if (!typedCommand.ToLower().Equals(enableAudioCommand)) {
+                        }
+                        else if (!typedCommand.ToLower().Equals(enableAudioCommand))
+                        {
                             speechRecognitionEngine.EmulateRecognize(typedCommand, CompareOptions.IgnoreCase);
                         }
                     }
@@ -156,15 +169,18 @@ namespace SpeechRecognition
         /// <returns></returns>
         private SpeechRecognitionEngine createSpeechEngine(string preferredCulture)
         {
-            foreach (RecognizerInfo config in SpeechRecognitionEngine.InstalledRecognizers()) {
-                if (config.Culture.ToString() == preferredCulture) {
+            foreach (RecognizerInfo config in SpeechRecognitionEngine.InstalledRecognizers())
+            {
+                if (config.Culture.ToString() == preferredCulture)
+                {
                     speechRecognitionEngine = new SpeechRecognitionEngine(config);
                     break;
                 }
             }
 
             // if the desired culture is not found, then load default
-            if (speechRecognitionEngine == null) {
+            if (speechRecognitionEngine == null)
+            {
                 Console.WriteLine("The desired culture is not installed on this machine, the speech-engine will continue using "
                     + SpeechRecognitionEngine.InstalledRecognizers()[0].Culture.ToString() + " as the default culture.",
                     "Culture " + preferredCulture + " not found!");
@@ -179,19 +195,29 @@ namespace SpeechRecognition
         /// </summary>
         private void loadGrammarAndCommands()
         {
-            try {
+            try
+            {
                 Choices texts = new Choices();
                 texts.Add(aiName);
-                string[] lines = File.ReadAllLines(Environment.CurrentDirectory + "\\example.txt");
-                foreach (string line in lines) {
+                string[] lines = File.ReadAllLines(Environment.CurrentDirectory + "\\AICommands.txt");
+                foreach (string line in lines)
+                {
                     // skip commentblocks and empty lines..
                     if (line.StartsWith("--") || line == String.Empty) continue;
 
                     // split the line
                     var parts = line.Split(new char[] { '|' });
 
+                    // construct the word
+                    Word word = new Word() { Text = parts[0], AttachedText = parts[1], IsShellCommand = (parts[2] == "true") };
+
+                    if (parts.Length > 3)
+                    {
+                        word.AIResponse = parts[3];
+                    }
+
                     // add commandItem to the list for later lookup or execution
-                    words.Add(new Word() { Text = parts[0], AttachedText = parts[1], IsShellCommand = (parts[2] == "true") });
+                    words.Add(word);
 
                     // add the text to the known choices of speechengine
                     texts.Add(parts[0]);
@@ -203,7 +229,8 @@ namespace SpeechRecognition
                 speechRecognitionEngine.LoadGrammar(dict);
 
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 throw ex;
             }
         }
@@ -215,37 +242,50 @@ namespace SpeechRecognition
         /// <returns></returns>
         private string getKnownTextOrExecute(string command)
         {
-            if (!command.StartsWith(aiName + " ")) {
-                return "";
-            } else {
-                command = command.Replace(aiName + " ", "");
+            if (command.ToLower().Contains(aiName.ToLower()))
+            {
+                command = command.Replace(aiName, "").Trim();
+            }
+            return ProcessCommand(command);
+        }
 
-                //Console.WriteLine(command);
-                try {
-                    var cmd = words.Where(c => c.Text == command).First();
+        private string ProcessCommand(string command)
+        {
+            string response;
+            try
+            {
+                var cmd = words.Where(c => c.Text.ToLower() == command.ToLower()).First();
 
-                    if (cmd.IsShellCommand) {
-                        Process proc = new Process();
-                        proc.EnableRaisingEvents = false;
-                        proc.StartInfo.FileName = cmd.AttachedText;
-                        proc.Start();
-                        lastCommand = command;
+                if (cmd.IsShellCommand)
+                {
+                    Process proc = new Process();
+                    proc.EnableRaisingEvents = false;
+                    proc.StartInfo.FileName = cmd.AttachedText;
+                    proc.Start();
+                    lastCommand = command;
 
-                        if (command.ToLower() == "i have a burn victim") {
-                            return "Fetching list of burn centers for you sir";
-                        } else {
-                            return "I've started : " + command;
-                        }
-                    } else {
-                        lastCommand = command;
-                        return cmd.AttachedText;
+                    if (cmd.AIResponse != null && !cmd.AIResponse.Equals(""))
+                    {
+                        response = cmd.AIResponse;
+                    }
+                    else
+                    {
+                        response = "I've started : " + command;
                     }
                 }
-                catch (Exception) {
+                else
+                {
                     lastCommand = command;
-                    return command;
+                    response = cmd.AttachedText;
                 }
             }
+            catch (Exception)
+            {
+                lastCommand = command;
+                response = command;
+            }
+
+            return response;
         }
 
         /// <summary>
@@ -257,27 +297,34 @@ namespace SpeechRecognition
         {
             Console.WriteLine(" In RecognizeCompletedHandler.");
 
-            if (e.Error != null) {
+            if (e.Error != null)
+            {
                 Console.WriteLine(" - Error occurred during recognition: {0}", e.Error);
                 return;
             }
-            if (e.Cancelled) {
+            if (e.Cancelled)
+            {
                 Console.WriteLine(" - asynchronous operation canceled.");
             }
-            if (e.InitialSilenceTimeout || e.BabbleTimeout) {
+            if (e.InitialSilenceTimeout || e.BabbleTimeout)
+            {
                 Console.WriteLine(" - BabbleTimeout = {0}; InitialSilenceTimeout = {1}", e.BabbleTimeout, e.InitialSilenceTimeout);
                 return;
             }
-            if (e.InputStreamEnded) {
+            if (e.InputStreamEnded)
+            {
                 Console.WriteLine(" - AudioPosition = {0}; InputStreamEnded = {1}", e.AudioPosition, e.InputStreamEnded);
             }
-            if (e.Result != null) {
+            if (e.Result != null)
+            {
                 Console.WriteLine(" - Grammar = {0}; Text = {1}; Confidence = {2}", e.Result.Grammar.Name, e.Result.Text, e.Result.Confidence);
-            } else {
+            }
+            else
+            {
                 Console.WriteLine(" - No result.");
             }
 
-            completed = true;
+            //completed = true;
         }
 
         /// <summary>
@@ -302,7 +349,7 @@ namespace SpeechRecognition
             speechSynthesizer.SpeakAsync("Voice input disabled");
             Console.WriteLine("Voice input disabled");
         }
-        
+
         #endregion
 
         #region speechEngine events
@@ -316,12 +363,14 @@ namespace SpeechRecognition
         {
             Console.WriteLine("Recognized: " + e.Result.Text);
             string command = "";
-            if (!keyboardEntryMode(e)) {
+            if (!keyboardEntryMode(e))
+            {
                 command = getKnownTextOrExecute(e.Result.Text);
             }
 
 
-            if (command != "") {
+            if (command != "")
+            {
                 Console.WriteLine("Command: " + command);
                 speechSynthesizer.SpeakAsync(command);
             }

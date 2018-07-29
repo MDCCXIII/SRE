@@ -42,19 +42,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="JarvisDriver.cs" />
+    <Compile Include="OLD\JarvisDriver.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Word.cs" />
+    <Compile Include="OLD\Word.cs" />
+    <Compile Include="SpeechRecognitionAI\AI.cs" />
+    <Compile Include="SpeechRecognitionAI\Command.cs" />
+    <Compile Include="SpeechRecognitionAI\RecognitionLibraries\CommandProccessor.cs" />
+    <Compile Include="SpeechRecognitionAI\RecognitionLibraries\DisablingCommands.cs" />
+    <Compile Include="SpeechRecognitionAI\RecognitionLibraries\GrammarFile.cs" />
+    <Compile Include="SpeechRecognitionAI\RecognitionLibraries\Locals.cs" />
+    <Compile Include="SpeechRecognitionAI\Recognition.cs" />
+    <Compile Include="SpeechRecognitionAI\Synthesizer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="example.txt">
+    <Content Include="AICommands.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
